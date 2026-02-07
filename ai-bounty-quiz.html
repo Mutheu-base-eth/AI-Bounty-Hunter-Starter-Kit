@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Bounty Hunter Assessment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-cyan: #00fff9;
+            --neon-pink: #ff006e;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0e27;
+            --card-bg: #151b3d;
+            --text-primary: #e0e7ff;
+            --text-secondary: #8892b0;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 110, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(0, 255, 249, 0.03) 50%,
+                transparent 100%
+            );
+            background-size: 100% 4px;
+            animation: scan 8s linear infinite;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                filter: drop-shadow(0 0 10px rgba(0, 255, 249, 0.5));
+            }
+            to {
+                filter: drop-shadow(0 0 20px rgba(255, 0, 110, 0.5));
+            }
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .progress-container {
+            background: rgba(21, 27, 61, 0.5);
+            border: 1px solid rgba(0, 255, 249, 0.3);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(0, 255, 249, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(0, 255, 249, 0.8);
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--neon-cyan);
+            font-weight: 600;
+        }
+
+        .quiz-card {
+            background: var(--card-bg);
+            border: 2px solid rgba(0, 255, 249, 0.3);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-pink), var(--neon-green));
+            border-radius: 15px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+
+        .quiz-card:hover::before {
+            opacity: 0.3;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .question-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: var(--neon-cyan);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .question-text {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            margin-bottom: 30px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(0, 255, 249, 0.2);
+            border-radius: 10px;
+            padding: 20px 25px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--neon-cyan);
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+
+        .option:hover {
+            background: rgba(0, 255, 249, 0.1);
+            border-color: var(--neon-cyan);
+            transform: translateX(5px);
+        }
+
+        .option:hover::before {
+            transform: scaleY(1);
+        }
+
+        .option.selected {
+            background: rgba(0, 255, 249, 0.15);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 249, 0.3);
+        }
+
+        .option.selected::before {
+            transform: scaleY(1);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        button {
+            font-family: 'Orbitron', sans-serif;
+            padding: 15px 40px;
+            border: 2px solid var(--neon-cyan);
+            background: transparent;
+            color: var(--neon-cyan);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+            z-index: -1;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
+            color: var(--dark-bg);
+            box-shadow: 0 0 30px rgba(0, 255, 249, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        button:disabled:hover {
+            color: var(--neon-cyan);
+            box-shadow: none;
+        }
+
+        button:disabled:hover::before {
+            width: 0;
+            height: 0;
+        }
+
+        .btn-submit {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .btn-submit::before {
+            background: var(--neon-green);
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 60px 40px;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 15px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-display::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 255, 249, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+
+        .score-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(4rem, 10vw, 7rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .score-label {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .recommendation {
+            background: var(--card-bg);
+            border: 2px solid rgba(255, 0, 110, 0.3);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .recommendation h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            margin-bottom: 20px;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+        }
+
+        .recommendation-content {
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-size: clamp(0.95rem, 2vw, 1.05rem);
+        }
+
+        .recommendation-content strong {
+            color: var(--neon-cyan);
+        }
+
+        .next-steps {
+            background: rgba(0, 255, 249, 0.05);
+            border-left: 4px solid var(--neon-cyan);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .next-steps h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--neon-cyan);
+        }
+
+        .next-steps ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .next-steps li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .next-steps li:last-child {
+            border-bottom: none;
+        }
+
+        .next-steps li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        .restart-btn {
+            margin: 40px auto 0;
+            display: block;
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+        }
+
+        .restart-btn::before {
+            background: var(--neon-pink);
+        }
+
+        @media (max-width: 768px) {
+            .quiz-card {
+                padding: 30px 20px;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .score-display {
+                padding: 40px 20px;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    
+    <div class="container">
+        <header>
+            <h1>AI Bounty Hunter</h1>
+            <p class="subtitle">Assessment Protocol v2.0</p>
+        </header>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Question 0 of 20</div>
+        </div>
+
+        <div id="quizContainer"></div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                id: 1,
+                category: 'skills',
+                question: 'How would you rate your understanding of machine learning and AI concepts?',
+                options: [
+                    { text: 'Expert - I can explain complex ML architectures and training methodologies', points: 5 },
+                    { text: 'Advanced - I understand models, prompting, and basic ML principles', points: 4 },
+                    { text: 'Intermediate - I know the basics and can work with AI tools', points: 3 },
+                    { text: 'Beginner - I\'m still learning but eager to grow', points: 2 }
+                ]
+            },
+            {
+                id: 2,
+                category: 'skills',
+                question: 'What is your experience with prompt engineering?',
+                options: [
+                    { text: 'I\'ve built complex prompting systems and understand advanced techniques', points: 5 },
+                    { text: 'I regularly craft effective prompts and iterate on them', points: 4 },
+                    { text: 'I can write basic prompts that get decent results', points: 3 },
+                    { text: 'I\'m new to prompt engineering', points: 1 }
+                ]
+            },
+            {
+                id: 3,
+                category: 'skills',
+                question: 'How comfortable are you with debugging and QA testing?',
+                options: [
+                    { text: 'Very comfortable - I systematically find edge cases and root causes', points: 5 },
+                    { text: 'Comfortable - I can identify and document bugs effectively', points: 4 },
+                    { text: 'Somewhat comfortable - I can spot obvious issues', points: 3 },
+                    { text: 'Not very comfortable - I need more practice', points: 2 }
+                ]
+            },
+            {
+                id: 4,
+                category: 'skills',
+                question: 'Do you have experience with API integration or technical documentation?',
+                options: [
+                    { text: 'Yes - I\'ve worked extensively with APIs and written documentation', points: 5 },
+                    { text: 'Some - I\'ve integrated a few APIs and read technical docs', points: 3 },
+                    { text: 'Limited - I\'m learning about APIs', points: 2 },
+                    { text: 'No - This is new territory for me', points: 1 }
+                ]
+            },
+            {
+                id: 5,
+                category: 'skills',
+                question: 'How strong are your written communication skills?',
+                options: [
+                    { text: 'Excellent - I can clearly explain complex technical issues', points: 5 },
+                    { text: 'Good - I communicate effectively in writing', points: 4 },
+                    { text: 'Average - I can get my point across', points: 3 },
+                    { text: 'Developing - I\'m working on improving', points: 2 }
+                ]
+            },
+            {
+                id: 6,
+                category: 'time',
+                question: 'How many hours per week can you dedicate to bounty hunting?',
+                options: [
+                    { text: '20+ hours - This could be my main focus', points: 5 },
+                    { text: '10-20 hours - I can commit significant time', points: 4 },
+                    { text: '5-10 hours - I have moderate availability', points: 3 },
+                    { text: 'Under 5 hours - This would be a side activity', points: 2 }
+                ]
+            },
+            {
+                id: 7,
+                category: 'time',
+                question: 'How quickly can you typically respond to time-sensitive bounties?',
+                options: [
+                    { text: 'Within hours - I check platforms multiple times daily', points: 5 },
+                    { text: 'Same day - I check regularly throughout the day', points: 4 },
+                    { text: 'Within 24-48 hours - I check once daily', points: 3 },
+                    { text: 'Several days - I check when I have time', points: 2 }
+                ]
+            },
+            {
+                id: 8,
+                category: 'time',
+                question: 'Are you comfortable with the variable nature of bounty availability?',
+                options: [
+                    { text: 'Yes - I thrive in dynamic, opportunity-based work', points: 5 },
+                    { text: 'Mostly - I can adapt to fluctuating workload', points: 4 },
+                    { text: 'Somewhat - I prefer more predictability but can manage', points: 3 },
+                    { text: 'Not really - I prefer steady, consistent work', points: 1 }
+                ]
+            },
+            {
+                id: 9,
+                category: 'payment',
+                question: 'What are your payment expectations from bounty hunting?',
+                options: [
+                    { text: 'Full-time income replacement', points: 3 },
+                    { text: 'Significant supplementary income ($1000+/month)', points: 4 },
+                    { text: 'Moderate supplementary income ($500-1000/month)', points: 5 },
+                    { text: 'Learning opportunity with some earnings potential', points: 4 }
+                ]
+            },
+            {
+                id: 10,
+                category: 'payment',
+                question: 'How comfortable are you with performance-based payment models?',
+                options: [
+                    { text: 'Very comfortable - I prefer merit-based compensation', points: 5 },
+                    { text: 'Comfortable - I understand the tradeoff for flexibility', points: 4 },
+                    { text: 'Somewhat comfortable - I have some concerns', points: 3 },
+                    { text: 'Uncomfortable - I prefer guaranteed payment', points: 1 }
+                ]
+            },
+            {
+                id: 11,
+                category: 'payment',
+                question: 'Do you understand that payment timing varies by platform and bounty?',
+                options: [
+                    { text: 'Yes - I\'m prepared for varying payment schedules', points: 5 },
+                    { text: 'Yes - Though I prefer faster payment cycles', points: 4 },
+                    { text: 'Somewhat - I need to learn more about this', points: 3 },
+                    { text: 'No - I need consistent, predictable payment timing', points: 1 }
+                ]
+            },
+            {
+                id: 12,
+                category: 'getting_started',
+                question: 'How would you find your first bounties?',
+                options: [
+                    { text: 'Research platforms, join communities, start with smaller tasks', points: 5 },
+                    { text: 'Sign up for major platforms and browse available bounties', points: 4 },
+                    { text: 'Ask for recommendations and guidance', points: 3 },
+                    { text: 'I\'m not sure where to start', points: 1 }
+                ]
+            },
+            {
+                id: 13,
+                category: 'getting_started',
+                question: 'What would be your strategy for building credibility?',
+                options: [
+                    { text: 'Complete smaller bounties perfectly, build portfolio, get reviews', points: 5 },
+                    { text: 'Focus on quality submissions and responsive communication', points: 4 },
+                    { text: 'Submit to many bounties and learn from feedback', points: 3 },
+                    { text: 'I\'m not sure how to build credibility', points: 1 }
+                ]
+            },
+            {
+                id: 14,
+                category: 'getting_started',
+                question: 'How do you learn new technical skills?',
+                options: [
+                    { text: 'Self-directed research, documentation, hands-on experimentation', points: 5 },
+                    { text: 'Online courses, tutorials, and practice projects', points: 4 },
+                    { text: 'Following guides and examples', points: 3 },
+                    { text: 'I prefer structured classroom learning', points: 2 }
+                ]
+            },
+            {
+                id: 15,
+                category: 'skills',
+                question: 'How well do you handle ambiguous or incomplete requirements?',
+                options: [
+                    { text: 'Excel - I ask clarifying questions and fill gaps intelligently', points: 5 },
+                    { text: 'Well - I can work with uncertainty and adapt', points: 4 },
+                    { text: 'Okay - I prefer clearer instructions', points: 3 },
+                    { text: 'Struggle - I need detailed specifications', points: 2 }
+                ]
+            },
+            {
+                id: 16,
+                category: 'skills',
+                question: 'What is your attention to detail like?',
+                options: [
+                    { text: 'Meticulous - I catch edge cases others miss', points: 5 },
+                    { text: 'Strong - I consistently deliver quality work', points: 4 },
+                    { text: 'Good - I usually catch important issues', points: 3 },
+                    { text: 'Developing - I sometimes overlook details', points: 2 }
+                ]
+            },
+            {
+                id: 17,
+                category: 'time',
+                question: 'How do you handle rejection or unsuccessful submissions?',
+                options: [
+                    { text: 'Learn from feedback and improve for next time', points: 5 },
+                    { text: 'Review what went wrong and adapt my approach', points: 4 },
+                    { text: 'Feel disappointed but keep trying', points: 3 },
+                    { text: 'Get discouraged easily', points: 1 }
+                ]
+            },
+            {
+                id: 18,
+                category: 'getting_started',
+                question: 'Are you familiar with common AI bounty platforms (e.g., Scale AI, Remotasks, Appen)?',
+                options: [
+                    { text: 'Yes - I\'ve researched or worked on multiple platforms', points: 5 },
+                    { text: 'Somewhat - I know about a few platforms', points: 3 },
+                    { text: 'A little - I\'ve heard of them', points: 2 },
+                    { text: 'No - This is new to me', points: 1 }
+                ]
+            },
+            {
+                id: 19,
+                category: 'skills',
+                question: 'How comfortable are you with data privacy and ethical AI considerations?',
+                options: [
+                    { text: 'Very comfortable - I understand the implications and best practices', points: 5 },
+                    { text: 'Comfortable - I\'m aware of key principles', points: 4 },
+                    { text: 'Somewhat familiar - I\'m still learning', points: 3 },
+                    { text: 'Unfamiliar - I need to learn about this', points: 2 }
+                ]
+            },
+            {
+                id: 20,
+                category: 'getting_started',
+                question: 'What motivates you most about AI bounty hunting?',
+                options: [
+                    { text: 'Combination of learning cutting-edge AI, flexibility, and income', points: 5 },
+                    { text: 'Working with AI technology and building new skills', points: 4 },
+                    { text: 'Flexible income opportunity', points: 3 },
+                    { text: 'Just exploring if it\'s right for me', points: 3 }
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = {};
+        let categoryScores = {
+            skills: 0,
+            time: 0,
+            payment: 0,
+            getting_started: 0
+        };
+
+        function renderQuestion() {
+            const question = questions[currentQuestion];
+            const container = document.getElementById('quizContainer');
+            
+            const optionsHTML = question.options.map((option, index) => `
+                <div class="option" data-index="${index}" onclick="selectOption(${index})">
+                    ${option.text}
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="quiz-card">
+                    <div class="question-number">Question ${currentQuestion + 1} of ${questions.length}</div>
+                    <div class="question-text">${question.question}</div>
+                    <div class="options" id="options">
+                        ${optionsHTML}
+                    </div>
+                    <div class="nav-buttons">
+                        <button onclick="previousQuestion()" ${currentQuestion === 0 ? 'disabled' : ''}>
+                            ← Previous
+                        </button>
+                        ${currentQuestion === questions.length - 1 
+                            ? '<button class="btn-submit" onclick="submitQuiz()" id="nextBtn" disabled>Submit</button>'
+                            : '<button onclick="nextQuestion()" id="nextBtn" disabled>Next →</button>'
+                        }
+                    </div>
+                </div>
+            `;
+
+            // Restore previous answer if exists
+            if (answers[currentQuestion] !== undefined) {
+                selectOption(answers[currentQuestion]);
+            }
+
+            updateProgress();
+        }
+
+        function selectOption(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[index].classList.add('selected');
+            
+            answers[currentQuestion] = index;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            if (answers[currentQuestion] !== undefined) {
+                currentQuestion++;
+                renderQuestion();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                renderQuestion();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+        }
+
+        function submitQuiz() {
+            if (Object.keys(answers).length !== questions.length) {
+                alert('Please answer all questions before submitting.');
+                return;
+            }
+
+            calculateScores();
+            displayResults();
+        }
+
+        function calculateScores() {
+            let totalScore = 0;
+            
+            questions.forEach((question, index) => {
+                const selectedOptionIndex = answers[index];
+                const points = question.options[selectedOptionIndex].points;
+                totalScore += points;
+                categoryScores[question.category] += points;
+            });
+
+            return totalScore;
+        }
+
+        function displayResults() {
+            const totalScore = calculateScores();
+            const maxScore = questions.length * 5;
+            const percentage = Math.round((totalScore / maxScore) * 100);
+
+            let recommendation = getRecommendation(percentage, categoryScores);
+
+            document.getElementById('quizContainer').classList.add('hidden');
+            document.querySelector('.progress-container').classList.add('hidden');
+            
+            const resultsHTML = `
+                <div class="score-display">
+                    <div class="score-number">${percentage}%</div>
+                    <div class="score-label">Readiness Score</div>
+                </div>
+
+                <div class="recommendation">
+                    <h2>${recommendation.title}</h2>
+                    <div class="recommendation-content">
+                        ${recommendation.message}
+                    </div>
+                    <div class="next-steps">
+                        <h3>Recommended Next Steps</h3>
+                        <ul>
+                            ${recommendation.steps.map(step => `<li>${step}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="restart-btn" onclick="restartQuiz()">Take Assessment Again</button>
+            `;
+
+            document.getElementById('results').innerHTML = resultsHTML;
+            document.getElementById('results').classList.add('active');
+        }
+
+        function getRecommendation(percentage, scores) {
+            if (percentage >= 85) {
+                return {
+                    title: '🚀 You\'re Ready to Launch',
+                    message: `Outstanding! Your assessment indicates you have <strong>strong foundational skills</strong> and the right mindset for AI bounty hunting. You understand the technical requirements, have realistic expectations about time and payment, and know how to get started effectively.`,
+                    steps: [
+                        'Create accounts on 3-5 major bounty platforms (Scale AI, Remotasks, Appen, Lionbridge, DataAnnotation)',
+                        'Complete platform qualification tests to unlock higher-paying tasks',
+                        'Start with 2-3 small bounties to build your reputation and portfolio',
+                        'Join AI bounty hunter communities on Discord or Reddit for insider tips',
+                        'Set up a tracking system for applications, earnings, and lessons learned',
+                        'Aim to complete your first paid bounty within 2 weeks'
+                    ]
+                };
+            } else if (percentage >= 70) {
+                return {
+                    title: '✅ You\'re Nearly There',
+                    message: `Great work! You have <strong>solid fundamentals</strong> for AI bounty hunting. Your skills and understanding are strong, though you may want to strengthen a few areas before diving in full-time. You're ready to start with beginner-friendly bounties while continuing to build your expertise.`,
+                    steps: [
+                        'Strengthen your weakest skill area (review your responses to identify gaps)',
+                        'Take 1-2 free online courses on prompt engineering or AI fundamentals',
+                        'Start with platforms that have lower barriers to entry (Remotasks, Appen)',
+                        'Begin with small, straightforward tasks to build confidence',
+                        'Dedicate 5-10 hours/week initially and scale up as you gain experience',
+                        'Connect with other beginners in online communities for mutual support'
+                    ]
+                };
+            } else if (percentage >= 55) {
+                return {
+                    title: '📚 Build Your Foundation First',
+                    message: `You have <strong>potential for AI bounty hunting</strong>, but you'll benefit from additional preparation before diving in. Focus on building specific skills and knowledge to increase your success rate and earning potential. This preparation time is an investment in your future success.`,
+                    steps: [
+                        'Complete beginner courses in: AI/ML basics, prompt engineering, and technical writing',
+                        'Practice with free AI tools (ChatGPT, Claude, etc.) to understand their capabilities',
+                        'Read documentation from bounty platforms to understand requirements and expectations',
+                        'Start following AI newsletters and communities to build domain knowledge',
+                        'Set realistic expectations: plan for 1-2 months of learning before serious earning',
+                        'Consider finding a mentor or study partner in the AI bounty space'
+                    ]
+                };
+            } else {
+                return {
+                    title: '🌱 Start Your Learning Journey',
+                    message: `AI bounty hunting is a <strong>learnable skill</strong>, but based on your assessment, you'll want to invest significant time in skill development first. This isn't a negative—many successful bounty hunters started exactly where you are. The key is building a strong foundation before pursuing paid work.`,
+                    steps: [
+                        'Start with free educational resources: Andrew Ng\'s ML course, OpenAI documentation, or Anthropic\'s prompt engineering guide',
+                        'Practice fundamental skills: technical writing, attention to detail, and self-directed learning',
+                        'Understand the AI landscape: read articles, watch videos, experiment with AI tools',
+                        'Set a 3-6 month learning timeline before expecting consistent earnings',
+                        'Join beginner-friendly AI communities where you can ask questions and learn from others',
+                        'Consider whether AI bounty hunting aligns with your learning style and career goals',
+                        'Explore related opportunities: AI testing, content moderation, or data labeling might be better starting points'
+                    ]
+                };
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            answers = {};
+            categoryScores = {
+                skills: 0,
+                time: 0,
+                payment: 0,
+                getting_started: 0
+            };
+
+            document.getElementById('quizContainer').classList.remove('hidden');
+            document.querySelector('.progress-container').classList.remove('hidden');
+            document.getElementById('results').classList.remove('active');
+            
+            renderQuestion();
+        }
+
+        // Initialize quiz
+        renderQuestion();
+    </script>
+</body>
+</html>
